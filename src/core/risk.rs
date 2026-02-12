@@ -1,14 +1,10 @@
-use crate::core::types::{Config, Position, Stats};
+use crate::core::types::{Config, Stats};
 
 pub fn check(
     stats: &Stats,
     balance_cents: u64,
-    positions: &[Position],
     config: &Config,
 ) -> Option<String> {
-    if !positions.is_empty() {
-        return Some("Position still open".into());
-    }
     if balance_cents < config.min_balance_cents {
         return Some(format!(
             "Balance {}¢ < {}¢ minimum",

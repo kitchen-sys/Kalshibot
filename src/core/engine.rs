@@ -63,9 +63,8 @@ pub async fn run_cycle(
     // 3. RISK — deterministic checks in Rust
     let computed_stats = stats::compute(&ledger);
     let balance = exchange.balance().await?;
-    let positions = exchange.positions().await?;
 
-    if let Some(veto) = risk::check(&computed_stats, balance, &positions, config) {
+    if let Some(veto) = risk::check(&computed_stats, balance, config) {
         tracing::info!("Risk veto: {}", veto);
         return Ok(());
     }
@@ -111,10 +110,10 @@ pub async fn run_cycle(
     let shares = decision.shares.unwrap_or(1).min(config.max_shares);
     let price = decision.max_price_cents.unwrap_or(50).clamp(1, 99);
 
-    // 8. FINAL POSITION CHECK — belt and suspenders
+    // 8. FINAL POSITION CHECK — only block if position is on THIS market
     let fresh_positions = exchange.positions().await?;
-    if !fresh_positions.is_empty() {
-        tracing::warn!("Position appeared during AI call — aborting order");
+    if fresh_positions.iter().any(|p| p.ticker == market.ticker) {
+        tracing::warn!("Position on {} — aborting order", market.ticker);
         return Ok(());
     }
 
