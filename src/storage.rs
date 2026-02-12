@@ -108,8 +108,12 @@ pub fn settle_last_trade(settlement: &Settlement) -> anyhow::Result<()> {
         if line.contains("| pending |") {
             let cols: Vec<&str> = line.split('|').map(|s| s.trim()).collect();
             if cols.len() >= 9 {
+                let shares: i64 = cols[4].parse().unwrap_or(1);
+                let price: i64 = cols[5].parse().unwrap_or(0);
+                let cost = price * shares;
+                let pnl = settlement.pnl_cents - cost;
                 let prev_cumulative: i64 = cols[8].parse().unwrap_or(0);
-                let new_cumulative = prev_cumulative + settlement.pnl_cents;
+                let new_cumulative = prev_cumulative + pnl;
                 let order_id = if cols.len() >= 10 { cols[9] } else { "" };
                 *line = format!(
                     "| {} | {} | {} | {} | {} | {} | {} | {} | {} |",
@@ -119,7 +123,7 @@ pub fn settle_last_trade(settlement: &Settlement) -> anyhow::Result<()> {
                     cols[4],
                     cols[5],
                     settlement.result,
-                    settlement.pnl_cents,
+                    pnl,
                     new_cumulative,
                     order_id
                 );
