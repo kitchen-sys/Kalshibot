@@ -197,7 +197,7 @@ impl Config {
         let pem = std::fs::read_to_string(&pem_path).unwrap_or_default();
 
         Ok(Self {
-            max_shares: 2,
+            max_shares: 5,
             max_daily_loss_cents: 1000,
             max_consecutive_losses: 7,
             min_balance_cents: 500,
